@@ -1,0 +1,29 @@
+name: Deploy to Remote Server
+
+on:
+    push:
+        branches:
+            - main # or your default branch name
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Install SSH key
+              uses: shimataro/ssh-key-action@v2
+              with:
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  known_hosts: unnecessary
+                  if_key_exists: replace
+
+            - name: Adding Known Hosts
+              run: ssh-keyscan -H 138.2.34.82 >> ~/.ssh/known_hosts
+
+            - name: Deploy with rsync
+              run: |
+                  rsync -avz --delete ./ ubuntu@138.2.34.82:/home/ubuntu/chrome-ai/
